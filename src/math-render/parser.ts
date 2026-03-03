@@ -156,7 +156,7 @@ function convertStatement(
     const name = texId(m[2]);
     const expr = convertExpr(m[3]);
     return {
-      latex: `\\underset{\\text{${m[2]}}}{${op}} \\quad ${expr}`,
+      latex: `\\underset{\\text{${m[2].replace(/_/g, "\\_")}}}{${op}} \\quad ${expr}`,
       fromLine,
       toLine,
       type: "objective",
@@ -179,8 +179,11 @@ function convertStatement(
     }
     const indexing = m[2] ? convertIndexing(m[2].trim()) : "";
     const body = convertConstraintBody(m[3].trim());
+    const idxDisplay = indexing
+      ? ` \\; \\forall \\, ${indexing}`
+      : "";
     return {
-      latex: `${texId(name)}${indexing} : \\qquad ${body}`,
+      latex: `${texId(name)}${idxDisplay} : \\qquad ${body}`,
       fromLine,
       toLine,
       type: "constraint",
@@ -194,9 +197,9 @@ function convertStatement(
 function convertDeclAttrs(attrs: string): string {
   let result = attrs;
 
-  // Indexing: {t in T} or {t in T : cond}
+  // Indexing: {t in T} or {t in T : cond} — wrap in displayed braces
   result = result.replace(/\{([^}]+)\}/g, (_, inner) => {
-    return convertIndexing("{" + inner + "}");
+    return "\\{" + convertIndexing("{" + inner + "}") + "\\}";
   });
 
   // Assignment :=

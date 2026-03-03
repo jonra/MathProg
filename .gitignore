@@ -6,3 +6,4 @@ src/language/mathprog.grammar.js
 src/language/mathprog.grammar.terms.js
 *.tsbuildinfo
 .DS_Store
+.idea/

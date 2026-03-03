@@ -100,4 +100,32 @@ describe("MathProg Grammar", () => {
     const { errors } = parseAndCheck("for {i in S} display: i;");
     expect(errors).toEqual([]);
   });
+
+  it("parses tuple indexing {(i,j) in S}", () => {
+    const { errors } = parseAndCheck(
+      "var x{(i,j) in Edges} >= 0;"
+    );
+    expect(errors).toEqual([]);
+  });
+
+  it("parses tuple indexing in constraints", () => {
+    const { errors } = parseAndCheck(
+      "s.t. flow{(i,j) in Edges}: x[i,j] <= cap[i,j];"
+    );
+    expect(errors).toEqual([]);
+  });
+
+  it("parses printf without colon", () => {
+    const { errors } = parseAndCheck(
+      "printf 'Total: %g\\n', obj;"
+    );
+    expect(errors).toEqual([]);
+  });
+
+  it("parses printf with indexing", () => {
+    const { errors } = parseAndCheck(
+      "printf {i in S}: 'x[%d] = %g\\n', i, x[i];"
+    );
+    expect(errors).toEqual([]);
+  });
 });

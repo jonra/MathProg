@@ -72,7 +72,7 @@ ConstraintDecl {
 }
 
 constraintBody {
-  expression CompareOp expression (CompareOp expression)?
+  expression
 }
 
 SolveStatement { solve ";" }
@@ -86,7 +86,8 @@ DisplayStatement {
 }
 
 PrintfStatement {
-  printf indexing? ":" String ("," ExprList)? ";"
+  printf indexing ":" String ("," ExprList)? ";" |
+  printf String ("," ExprList)? ";"
 }
 
 ForStatement {
@@ -175,7 +176,7 @@ IndexEntry {
 }
 
 ParenExpr {
-  "(" expression ")"
+  "(" ExprList ")"
 }
 
 SetLiteral {
