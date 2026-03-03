@@ -47,6 +47,20 @@ const libraryBuild = {
   ],
 };
 
+const demoPlugins = (outDir) => [
+  resolve({ browser: true, extensions: [".ts", ".js"] }),
+  commonjs(),
+  typescript({
+    tsconfig: "./tsconfig.json",
+    compilerOptions: {
+      declaration: false,
+      declarationDir: null,
+      outDir,
+      allowJs: true,
+    },
+  }),
+];
+
 const demoBuild = {
   input: "demo/demo.js",
   output: {
@@ -54,19 +68,17 @@ const demoBuild = {
     format: "iife",
     sourcemap: true,
   },
-  plugins: [
-    resolve({ browser: true, extensions: [".ts", ".js"] }),
-    commonjs(),
-    typescript({
-      tsconfig: "./tsconfig.json",
-      compilerOptions: {
-        declaration: false,
-        declarationDir: null,
-        outDir: "./demo",
-        allowJs: true,
-      },
-    }),
-  ],
+  plugins: demoPlugins("./demo"),
 };
 
-export default isDev ? [demoBuild] : [libraryBuild, demoBuild];
+const docsBuild = {
+  input: "demo/demo.js",
+  output: {
+    file: "docs/demo.bundle.js",
+    format: "iife",
+    sourcemap: true,
+  },
+  plugins: demoPlugins("./docs"),
+};
+
+export default isDev ? [demoBuild] : [libraryBuild, demoBuild, docsBuild];
