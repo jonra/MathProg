@@ -1,0 +1,19 @@
+# Source and dev files
+.github/
+demo/
+test/
+.claude/
+*.grammar
+rollup.config.mjs
+tsconfig.json
+
+# Generated source maps for dev
+src/language/*.js
+
+# IDE and OS files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db

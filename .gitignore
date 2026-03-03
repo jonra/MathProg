@@ -1,0 +1,8 @@
+node_modules/
+dist/
+demo/demo.bundle.js
+demo/demo.bundle.js.map
+src/language/mathprog.grammar.js
+src/language/mathprog.grammar.terms.js
+*.tsbuildinfo
+.DS_Store

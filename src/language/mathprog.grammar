@@ -1,0 +1,249 @@
+@top Program { statement* }
+
+@skip { whitespace | LineComment | BlockComment }
+
+@precedence {
+  subscript @left,
+  suffix @left,
+  call @left,
+  pow @right,
+  prefix,
+  times @left,
+  plus @left,
+  setOp @left,
+  comp @left,
+  logic @left,
+  cond @right
+}
+
+statement {
+  SetDecl |
+  ParamDecl |
+  VarDecl |
+  ObjectiveDecl |
+  ConstraintDecl |
+  SolveStatement |
+  CheckStatement |
+  DisplayStatement |
+  PrintfStatement |
+  ForStatement |
+  EndStatement
+}
+
+SetDecl {
+  set Identifier indexing? setAttrs* ";"
+}
+
+setAttrs {
+  dimen Number |
+  within expression |
+  Default expression |
+  ":=" expression
+}
+
+ParamDecl {
+  param Identifier indexing? paramAttrs* ";"
+}
+
+paramAttrs {
+  integer | binary | symbolic |
+  Default expression |
+  ":=" expression |
+  CompareOp expression
+}
+
+VarDecl {
+  var Identifier indexing? varAttrs* ";"
+}
+
+varAttrs {
+  integer | binary |
+  CompareOp expression |
+  ":=" expression
+}
+
+ObjectiveDecl {
+  (minimize | maximize) Identifier ":" expression ";"
+}
+
+ConstraintDecl {
+  subjectTo Identifier indexing? ":" constraintBody ";" |
+  Identifier indexing? ":" constraintBody ";"
+}
+
+constraintBody {
+  expression CompareOp expression (CompareOp expression)?
+}
+
+SolveStatement { solve ";" }
+
+CheckStatement {
+  check indexing? ":" expression ";"
+}
+
+DisplayStatement {
+  display indexing? ":" ExprList ";"
+}
+
+PrintfStatement {
+  printf indexing? ":" String ("," ExprList)? ";"
+}
+
+ForStatement {
+  for indexing (statement | "{" statement* "}")
+}
+
+EndStatement { end ";" }
+
+ExprList { expression ("," expression)* }
+
+expression {
+  IfExpr |
+  binaryExpr
+}
+
+IfExpr {
+  if expression then expression (!cond else expression)?
+}
+
+binaryExpr {
+  binaryExpr !logic (or | and) binaryExpr |
+  not binaryExpr |
+  binaryExpr !comp CompareOp binaryExpr |
+  binaryExpr !comp (In | notIn) binaryExpr |
+  binaryExpr !setOp (union | inter | diff | symdiff | cross) binaryExpr |
+  binaryExpr !plus ("+" | "-") binaryExpr |
+  binaryExpr !times ("*" | "/" | div | mod) binaryExpr |
+  unaryExpr
+}
+
+unaryExpr {
+  !prefix ("+" | "-") unaryExpr |
+  powExpr
+}
+
+powExpr {
+  postfixExpr !pow ("**" | "^") unaryExpr |
+  postfixExpr
+}
+
+postfixExpr {
+  postfixExpr !subscript Subscript |
+  postfixExpr !suffix Suffix |
+  atom
+}
+
+atom {
+  Number |
+  String |
+  Identifier |
+  FunctionCall |
+  AggregateExpr |
+  ParenExpr |
+  SetLiteral
+}
+
+Subscript {
+  "[" ExprList "]"
+}
+
+Suffix {
+  "." Identifier
+}
+
+FunctionCall {
+  Identifier !call "(" ExprList? ")"
+}
+
+AggregateExpr {
+  AggregateOp indexing expression
+}
+
+AggregateOp {
+  sum | prod | Min | Max |
+  forall | exists |
+  setof | count
+}
+
+indexing {
+  "{" IndexEntry ("," IndexEntry)* (":" expression)? "}"
+}
+
+IndexEntry {
+  Identifier ~indexIdent In expression |
+  expression ~indexIdent
+}
+
+ParenExpr {
+  "(" expression ")"
+}
+
+SetLiteral {
+  "{" ExprList? "}"
+}
+
+CompareOp { "<=" | ">=" | "=" | "<>" | "<" | ">" }
+
+@external tokens subjectToTokenizer from "./tokens" { subjectTo, notIn }
+
+@tokens {
+  whitespace { $[ \t\n\r]+ }
+  LineComment { "#" ![\n]* }
+  BlockComment { "/*" blockCommentRest }
+  blockCommentRest { ![*] blockCommentRest | "*" blockCommentAfterStar }
+  blockCommentAfterStar { "/" | ![/] blockCommentRest }
+
+  Number { $[0-9]+ ("." $[0-9]+)? ($[eE] $[+\-]? $[0-9]+)? }
+  String { "'" (!['\\] | "\\" _)* "'" | '"' (!["\\] | "\\" _)* '"' }
+
+  Identifier { $[a-zA-Z_] $[a-zA-Z0-9_]* }
+
+  @precedence { Number, Identifier }
+  @precedence { BlockComment, "/"  }
+  @precedence { "**", "*" }
+  @precedence { ":=", ":" }
+  @precedence { "<=", "<>" , "<" }
+  @precedence { ">=", ">" }
+}
+
+@external propSource mathProgHighlighting from "./highlight"
+
+set[@name=set] { @specialize[@name=set]<Identifier, "set"> }
+param[@name=param] { @specialize[@name=param]<Identifier, "param"> }
+var[@name=var] { @specialize[@name=var]<Identifier, "var"> }
+minimize[@name=minimize] { @specialize[@name=minimize]<Identifier, "minimize"> }
+maximize[@name=maximize] { @specialize[@name=maximize]<Identifier, "maximize"> }
+solve[@name=solve] { @specialize[@name=solve]<Identifier, "solve"> }
+check[@name=check] { @specialize[@name=check]<Identifier, "check"> }
+display[@name=display] { @specialize[@name=display]<Identifier, "display"> }
+printf[@name=printf] { @specialize[@name=printf]<Identifier, "printf"> }
+for[@name=for] { @specialize[@name=for]<Identifier, "for"> }
+end[@name=end] { @specialize[@name=end]<Identifier, "end"> }
+if[@name=if] { @specialize[@name=if]<Identifier, "if"> }
+then[@name=then] { @specialize[@name=then]<Identifier, "then"> }
+else[@name=else] { @specialize[@name=else]<Identifier, "else"> }
+or[@name=or] { @specialize[@name=or]<Identifier, "or"> }
+and[@name=and] { @specialize[@name=and]<Identifier, "and"> }
+not[@name=not] { @specialize[@name=not]<Identifier, "not"> }
+In[@name=In] { @specialize[@name=In]<Identifier, "in"> }
+union[@name=union] { @specialize[@name=union]<Identifier, "union"> }
+inter[@name=inter] { @specialize[@name=inter]<Identifier, "inter"> }
+diff[@name=diff] { @specialize[@name=diff]<Identifier, "diff"> }
+symdiff[@name=symdiff] { @specialize[@name=symdiff]<Identifier, "symdiff"> }
+cross[@name=cross] { @specialize[@name=cross]<Identifier, "cross"> }
+sum[@name=sum] { @specialize[@name=sum]<Identifier, "sum"> }
+prod[@name=prod] { @specialize[@name=prod]<Identifier, "prod"> }
+Min[@name=Min] { @specialize[@name=Min]<Identifier, "min"> }
+Max[@name=Max] { @specialize[@name=Max]<Identifier, "max"> }
+forall[@name=forall] { @specialize[@name=forall]<Identifier, "forall"> }
+exists[@name=exists] { @specialize[@name=exists]<Identifier, "exists"> }
+setof[@name=setof] { @specialize[@name=setof]<Identifier, "setof"> }
+count[@name=count] { @specialize[@name=count]<Identifier, "count"> }
+dimen[@name=dimen] { @specialize[@name=dimen]<Identifier, "dimen"> }
+within[@name=within] { @specialize[@name=within]<Identifier, "within"> }
+Default[@name=Default] { @specialize[@name=Default]<Identifier, "default"> }
+integer[@name=integer] { @specialize[@name=integer]<Identifier, "integer"> }
+binary[@name=binary] { @specialize[@name=binary]<Identifier, "binary"> }
+symbolic[@name=symbolic] { @specialize[@name=symbolic]<Identifier, "symbolic"> }
+div[@name=div] { @specialize[@name=div]<Identifier, "div"> }
+mod[@name=mod] { @specialize[@name=mod]<Identifier, "mod"> }

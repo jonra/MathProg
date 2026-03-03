@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - run: npm ci
+      - run: npm run grammar
+      - run: npm run build
+      - run: npm test
+
+      - name: Check bundle size
+        run: |
+          echo "ESM bundle: $(wc -c < dist/index.esm.js) bytes"
+          echo "CJS bundle: $(wc -c < dist/index.cjs.js) bytes"
+          echo "UMD bundle: $(wc -c < dist/index.umd.js) bytes"
+
+  publish-dry-run:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run grammar
+      - run: npm run build
+      - run: npm pack --dry-run
